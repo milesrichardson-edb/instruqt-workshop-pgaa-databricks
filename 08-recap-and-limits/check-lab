@@ -1,11 +1,12 @@
 #!/bin/bash
 # Wrap-up: nothing to verify. Just confirm the lab is still up so we leave
 # the learner in a good state.
+# psql is inside the pgd container, not on the host VM — exec into it.
 set -euo pipefail
 
 # Soft check — don't fail the challenge if PGD is restarting; the learner
 # is at the end of the track anyway.
-if PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo -c 'SELECT 1' >/dev/null 2>&1; then
+if docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -c 'SELECT 1'" >/dev/null 2>&1; then
   echo "OK: lab still healthy. Workshop complete."
 else
   echo "Lab no longer healthy, but the workshop is complete."

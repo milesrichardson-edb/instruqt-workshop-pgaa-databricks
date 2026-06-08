@@ -1,15 +1,16 @@
 #!/bin/bash
 # Confirm the local Lakekeeper catalog is registered and attached.
+# psql is inside the pgd container, not on the host VM — exec into it.
 set -euo pipefail
 
-PSQL="PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo -tAc"
+PSQL='docker exec pgd bash -c'
 
-if ! eval "$PSQL \"SELECT 1\"" >/dev/null 2>&1; then
-  echo "Couldn't connect to PGD on :7432." >&2
+if ! eval "$PSQL \"PGPASSWORD=secret psql -U postgres -d demo -tAc 'SELECT 1'\"" >/dev/null 2>&1; then
+  echo "Couldn't connect to PGD." >&2
   exit 1
 fi
 
-ROW=$(eval "$PSQL \"SELECT name||'|'||status FROM pgaa.list_catalogs() WHERE name = 'local_lakekeeper'\"")
+ROW=$(eval "$PSQL \"PGPASSWORD=secret psql -U postgres -d demo -tAc \\\"SELECT name||'|'||status FROM pgaa.list_catalogs() WHERE name = 'local_lakekeeper'\\\"\"")
 
 if [ -z "$ROW" ]; then
   echo "FAIL: pgaa.list_catalogs() does not include 'local_lakekeeper'." >&2

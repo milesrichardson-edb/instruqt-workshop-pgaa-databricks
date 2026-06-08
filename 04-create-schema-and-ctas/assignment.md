@@ -14,7 +14,7 @@ tabs:
   title: Lab DB (psql)
   type: terminal
   hostname: lab
-  cmd: PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo
+  cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
 - id: r20roq2cdxur
   title: MinIO console
   type: service

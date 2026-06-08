@@ -7,9 +7,9 @@ if ! curl -fsS http://localhost:8181/health >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo \
-     -c 'SELECT 1' >/dev/null 2>&1; then
-  echo "PGD on :7432 isn't ready yet. Wait ~15s and click Check again." >&2
+# psql is inside the pgd container, not on the host VM — exec into it.
+if ! docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -c 'SELECT 1'" >/dev/null 2>&1; then
+  echo "PGD isn't ready yet. Wait ~15s and click Check again." >&2
   exit 1
 fi
 

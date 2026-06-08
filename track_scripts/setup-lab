@@ -89,19 +89,22 @@ for i in $(seq 1 60); do
   sleep 2
 done
 
-log "Waiting for PGD (port 7432)..."
-for i in $(seq 1 60); do
-  if PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo -c 'SELECT 1' >/dev/null 2>&1; then
-    log "PGD ready."
+log "Waiting for PGD to accept connections (via container)..."
+# psql isn't on the sandbox VM, so we exec into the PGD container. PGD's own
+# healthcheck runs the same command, so once `docker exec` succeeds we know
+# both the container is up and the demo DB exists.
+for i in $(seq 1 90); do
+  if docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -c 'SELECT 1'" >/dev/null 2>&1; then
+    log "PGD ready (after ${i} attempts)."
     break
   fi
   sleep 2
 done
 
 log "Applying source-schema seed (region + lineitem)..."
-PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo \
-  -v ON_ERROR_STOP=1 \
-  -f "$LAB_DIR/seed/010_source_schema.sql" \
-  2>&1 | sed 's/^/[setup-lab]   /' || log "Seed already applied (or PGD unavailable)"
+# Stream the seed file into psql inside the container; no need to bind-mount.
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" \
+  < "$LAB_DIR/seed/010_source_schema.sql" 2>&1 | sed 's/^/[setup-lab]   /' \
+  || log "Seed already applied (or PGD unavailable)"
 
 log "Lab setup complete."
