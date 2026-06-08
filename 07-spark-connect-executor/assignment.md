@@ -1,21 +1,21 @@
 ---
 slug: spark-connect-executor
-id: redaznpseiuy
+id: xmfss9nc3bvg
 type: challenge
 title: Switch the executor engine to Spark Connect
 teaser: SET pgaa.executor_engine = 'spark_connect' — same query, now offloaded to
   Spark.
 tabs:
-- id: ycywfjz0dbyt
+- id: fqnk3fv4ftnh
   title: Lab terminal
   type: terminal
   hostname: lab
-- id: r3o0wlvslvxm
+- id: rbaatao1snud
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo
-- id: igvqgyhfwnv6
+- id: ckkwjaus03x2
   title: Spark UI
   type: service
   hostname: lab

@@ -1,12 +1,12 @@
 ---
 slug: prereqs-checklist
-id: 9tih5t9ytq0v
+id: oh51eoupgg0d
 type: challenge
 title: Prereqs — what you need from Databricks before you start
 teaser: Confirm you have the workspace URL, cluster ID, PAT, and EXTERNAL USE SCHEMA
   grant.
 tabs:
-- id: fuaotgp7teed
+- id: c3yrbz8ngthd
   title: Lab terminal
   type: terminal
   hostname: lab

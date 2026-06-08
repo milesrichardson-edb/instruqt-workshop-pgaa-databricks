@@ -1,9 +1,5 @@
 # Unified entry point for the workshop's local lab stack.
 #
-# Vendored from converged-analytics-internal — see lab/README.md for the
-# scope-trimming we applied (analytics-db / monitoring / wem / proxy /
-# call-center-demo are out of scope for this workshop).
-#
 # Usage (inside the Instruqt sandbox VM, or your laptop):
 #   cd lab && docker compose up -d
 #

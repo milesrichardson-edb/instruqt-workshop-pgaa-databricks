@@ -1,21 +1,21 @@
 ---
 slug: create-schema-and-ctas
-id: zmfoukihxkkx
+id: ozqrwubupajo
 type: challenge
 title: Create a schema and write a table via CTAS
 teaser: CREATE TABLE … USING PGAA AS SELECT * FROM source — once into UC, once into
   Lakekeeper.
 tabs:
-- id: sexrqyjvg6cd
+- id: xlybizl20fn0
   title: Lab terminal
   type: terminal
   hostname: lab
-- id: b5fwdomzmnqx
+- id: jwekwzzebarx
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo
-- id: cyistnmuwagl
+- id: r20roq2cdxur
   title: MinIO console
   type: service
   hostname: lab

@@ -1,4 +1,4 @@
-# Local lab stack (vendored)
+# Local lab stack
 
 This directory contains the local Iceberg + Postgres stack the Instruqt sandbox
 runs to mirror the real Postgres-host-against-Databricks workflow. Every
@@ -32,39 +32,6 @@ The seed in `seed/010_source_schema.sql` is applied by
 `source_schema.region` (5 rows) and `source_schema.lineitem` (~10 rows) so the
 CTAS examples in challenges 04, 05, and 07 succeed against the local catalog.
 
-## Vendored from where
-
-```
-~/vvv/converged-analytics-internal/components/catalog/         → components/catalog/
-~/vvv/converged-analytics-internal/components/transactional-db/ → components/transactional-db/
-~/vvv/converged-analytics-internal/components/spark/            → components/spark/
-```
-
-The reference repo is **read-only**. To refresh, re-run the equivalent of:
-
-```bash
-SRC=~/vvv/converged-analytics-internal
-DST=$(git rev-parse --show-toplevel)/lab
-cp -R "$SRC/components/catalog/."          "$DST/components/catalog/"
-cp -R "$SRC/components/transactional-db/." "$DST/components/transactional-db/"
-cp -R "$SRC/components/spark/."            "$DST/components/spark/"
-```
-
-## What we trimmed (from the reference repo's root `docker-compose.yml`)
-
-The reference repo includes a much wider stack. We dropped these components —
-all out of scope for this workshop:
-
-- `components/analytics-db/` (WHPG / Greenplum fork)
-- `components/monitoring/` (Prometheus, Loki, Grafana, Mailpit)
-- `components/wem/` (PGD WEM admin UI)
-- `components/proxy/` (Caddy reverse proxy)
-- `demos/call-center-demo/`
-- `components/spark/docker-compose-gpu.yml` and `components/spark/docker/spark-rapids/` (NVIDIA RAPIDS variant)
-
-If you ever need to bring those back, copy them in from the reference repo and
-add their compose paths to `lab/docker-compose.yml`.
-
 ## EDB subscription token: runtime build
 
 `components/transactional-db/Dockerfile` builds with an `EDB_SUBSCRIPTION_TOKEN`
@@ -72,7 +39,7 @@ BuildKit secret to install `edb-pgd6-expanded-pgextended17` and
 `edb-postgresextended-17-pgaa` from EDB's authenticated apt repositories.
 The Instruqt sandbox VM gets the token via an Instruqt **sandbox secret**
 (declared in `config.yml` under `secrets:`), set in the Instruqt UI under
-**Track → Settings → Secrets** — same approach as the WHPG workshop.
+**Org → Settings → Secrets**.
 
 Flow:
 
@@ -80,8 +47,8 @@ Flow:
 2. The track operator enters the actual token value in the Instruqt UI.
 3. Instruqt injects it as an env var on the `lab` VM at sandbox start.
 4. `track_scripts/setup-lab` exports it and runs `docker compose build pgd`.
-5. The vendored `lab/components/transactional-db/docker-compose.yml`
-   already declares the BuildKit secret wired to that env var:
+5. `components/transactional-db/docker-compose.yml` declares the BuildKit
+   secret wired to that env var:
 
    ```yaml
    secrets:

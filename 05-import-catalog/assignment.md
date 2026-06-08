@@ -1,16 +1,16 @@
 ---
 slug: import-catalog
-id: clueipywbg1r
+id: p9sbpyhezj49
 type: challenge
 title: Import an entire catalog namespace
 teaser: pgaa.import_catalog() pulls every table in a namespace into Postgres in one
   call.
 tabs:
-- id: f61cj7zxyujx
+- id: 45mbzjh48qql
   title: Lab terminal
   type: terminal
   hostname: lab
-- id: wpoqtmoyvsz3
+- id: 2w1wxcoiezq7
   title: Lab DB (psql)
   type: terminal
   hostname: lab

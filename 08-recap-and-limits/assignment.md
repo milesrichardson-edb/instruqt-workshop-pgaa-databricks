@@ -1,16 +1,16 @@
 ---
 slug: recap-and-limits
-id: m2msgp7i4uey
+id: drtpe14yxfwd
 type: challenge
 title: Recap + Known Limitations
 teaser: What you've built, what you can't (yet) do, and which engine to choose for
   what.
 tabs:
-- id: fbokoxlowkwn
+- id: c1bmt6gn9ydq
   title: Lab terminal
   type: terminal
   hostname: lab
-- id: u2txhmnbafun
+- id: dxshjupachre
   title: Lab DB (psql)
   type: terminal
   hostname: lab
@@ -114,11 +114,8 @@ working in your environment.
 
 # Where to go from here
 
-- The PGAA reference is at
-  `~/vvv/converged-analytics-internal/.claude/pgaa-reference.md` (read-only;
-  treat as documentation).
-- The PDF in `prep-docs/guide-databricks-setup.pdf` covers the Azure-side
-  setup we skipped.
+- The full PGAA reference (every GUC, every catalog option) is in EDB's
+  documentation portal.
 - For real-world deploys, the EDB analytics team can help with the catalog
   registration JSON if your org has non-trivial OAuth or networking
   constraints.

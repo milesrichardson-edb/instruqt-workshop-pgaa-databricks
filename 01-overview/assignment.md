@@ -1,6 +1,6 @@
 ---
 slug: overview
-id: wafwgzopsxlj
+id: fwmyi1cmptgr
 type: challenge
 title: Overview — what you'll build, and the two-track mental model
 teaser: PGAA + Databricks Unity Catalog, demonstrated against your real workspace
@@ -13,21 +13,21 @@ notes:
     with PGAA installed, and a Spark Connect server. That whole stack
     will be ready by the time you reach challenge 03.
 tabs:
-- id: hh5wwzviljqx
+- id: dnkefegl5xhz
   title: Lab terminal
   type: terminal
   hostname: lab
-- id: hoobjohhaxex
+- id: qewryzhgersl
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo
-- id: xzwffyvadghv
+- id: 7eustotod2vt
   title: Lakekeeper UI
   type: service
   hostname: lab
   port: 8181
-- id: uaoc45nrvdrc
+- id: mpcyixsrz8o1
   title: MinIO console
   type: service
   hostname: lab

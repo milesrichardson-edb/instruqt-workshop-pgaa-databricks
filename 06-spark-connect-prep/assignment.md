@@ -1,12 +1,12 @@
 ---
 slug: spark-connect-prep
-id: hkhgeadmzbbn
+id: dgccdml0ylwh
 type: challenge
 title: Spark Connect prerequisites — Databricks side
 teaser: Confirm a Unity-Catalog-compatible cluster, capture the cluster ID, reuse
   the PAT.
 tabs:
-- id: wxwjxm5faeyk
+- id: yygegdroxmiy
   title: Lab terminal
   type: terminal
   hostname: lab
