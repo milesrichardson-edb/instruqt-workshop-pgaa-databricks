@@ -1,0 +1,14 @@
+#!/bin/bash
+# Confirm the local Spark Connect server is reachable. Databricks-side
+# verification can't be done from inside Instruqt.
+set -euo pipefail
+
+if ! bash -c '</dev/tcp/localhost/15002' 2>/dev/null; then
+  echo "FAIL: local Spark Connect (:15002) isn't listening." >&2
+  echo "      Wait ~30s for the spark-connect container to finish booting and click Check again." >&2
+  echo "      You can monitor it with: docker compose logs -f spark-connect" >&2
+  exit 1
+fi
+
+echo "OK: local Spark Connect listening on :15002."
+exit 0

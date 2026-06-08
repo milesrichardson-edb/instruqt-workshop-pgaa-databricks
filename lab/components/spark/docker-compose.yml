@@ -1,0 +1,137 @@
+x-vars:
+  spark_image: &spark_image "spark:3.5.6-java17"
+  # Scaled down for local Docker desktop limits
+  worker_memory: &worker_memory "${SPARK_WORKER_MEMORY:-8g}"
+  worker_cores: &worker_cores "${SPARK_WORKER_CORES:-4}"
+
+x-spark-common: &spark-common
+  image: *spark_image
+  environment: &common-environment
+    SPARK_NO_DAEMONIZE: "true"
+    SPARK_LOCAL_DIRS: /data/spark
+    SPARK_WORK_DIR: /data/spark
+  volumes:
+    - spark-data:/data/spark
+    - spark-data:/data/spark-app
+
+x-spark-worker: &spark-worker
+  <<: *spark-common
+  depends_on:
+    spark-init:
+      condition: service_completed_successfully
+    spark-master:
+      condition: service_healthy
+  command:
+    - /opt/spark/sbin/start-worker.sh
+    - spark://spark-master:7077
+    - --memory
+    - *worker_memory
+    - --cores
+    - *worker_cores
+  environment: &worker-environment
+    <<: *common-environment
+    SPARK_WORKER_OPTS: >-
+      -Dspark.executor.extraJavaOptions="-Djava.io.tmpdir=/data/spark"
+
+services:
+  # Init container to fix volume permissions (Spark runs as uid 185)
+  spark-init:
+    image: *spark_image
+    container_name: spark-init
+    user: root
+    volumes:
+      - spark-data:/data/spark
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["chmod -R 777 /data/spark"]
+    networks:
+      - converged-analytics-network
+
+  spark-master:
+    image: *spark_image
+    hostname: spark-master
+    container_name: spark-master
+    depends_on:
+      spark-init:
+        condition: service_completed_successfully
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+      # Reverse proxy support for Caddy at /spark
+      SPARK_MASTER_OPTS: >-
+        -Dspark.ui.reverseProxy=true
+        -Dspark.ui.reverseProxyUrl=/spark
+    command: /opt/spark/sbin/start-master.sh
+    ports:
+      # 8080 UI: localhost only (accessed via Caddy /spark)
+      # 7077 cluster: 0.0.0.0 (Spark workers may connect)
+      - "${BIND_IP:-127.0.0.1}:8080:8080"
+      - "${BIND_IP:-0.0.0.0}:7077:7077"
+    networks:
+      - converged-analytics-network
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  spark-connect:
+    <<: *spark-common
+    depends_on:
+      spark-init:
+        condition: service_completed_successfully
+      spark-master:
+        condition: service_healthy
+    container_name: spark-connect
+    ports:
+      # 4040 UI: localhost only (accessed via Caddy /spark/proxy/...)
+      # 15002 gRPC: 0.0.0.0 (dev backend, external tools may connect)
+      - "${BIND_IP:-127.0.0.1}:4040:4040"
+      - "${BIND_IP:-0.0.0.0}:15002:15002"
+    networks:
+      - converged-analytics-network
+    command: >
+      /opt/spark/sbin/start-connect-server.sh --master spark://spark-master:7077
+      --packages "org.apache.spark:spark-connect_2.12:3.5.6,io.delta:delta-spark_2.12:3.3.1,org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.2,org.apache.iceberg:iceberg-aws-bundle:1.9.2,org.apache.hadoop:hadoop-aws:3.3.4"
+      --conf "spark.driver.extraJavaOptions=-Divy.cache.dir=/data/spark -Divy.home=/data/spark -Djava.io.tmpdir=/data/spark"
+      --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/spark"
+      --conf "spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+      --conf "spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog"
+      --conf "spark.driver.memory=2g"
+      --conf "spark.executor.instances=1"
+      --conf "spark.executor.cores=2"
+      --conf "spark.executor.memory=2g"
+      --conf "spark.scheduler.minRegisteredResourcesRatio=1.0"
+      --conf "spark.locality.wait=0s"
+      --conf "spark.sql.files.maxPartitionBytes=128mb"
+      --conf "spark.ui.reverseProxy=true"
+      --conf "spark.ui.reverseProxyUrl=/spark"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/15002'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  spark-worker-0:
+    <<: *spark-worker
+    hostname: spark-worker-0
+    container_name: spark-worker-0
+    networks:
+      - converged-analytics-network
+    environment:
+      <<: *worker-environment
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  spark-data:
+
+networks:
+  converged-analytics-network:
+    external: true
+    name: converged-analytics-network
+

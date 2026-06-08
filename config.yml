@@ -1,0 +1,21 @@
+version: "3"
+
+# A full VM (not a container) is required because the lab runs Docker Compose
+# with Spark + PGD + Lakekeeper + MinIO — too heavy for an Instruqt container
+# host, and containers don't support pause/resume.
+virtualmachines:
+  - name: lab
+    image: instruqt/docker-28-3
+    machine_type: n1-standard-4
+    shell: /bin/bash
+
+# Sandbox secrets — values are entered in the Instruqt UI (Track → Settings →
+# Secrets), NOT in this file. They're injected as env vars on the lab VM so
+# `track_scripts/setup-lab` can use them.
+#
+# EDB_SUBSCRIPTION_TOKEN: required to build the PGD+PGAA image at sandbox boot
+# (`lab/components/transactional-db/Dockerfile` mounts it as a BuildKit secret
+# to install edb-pgd6-expanded-pgextended17 and edb-postgresextended-17-pgaa
+# from EDB's authenticated apt repos). Same pattern as the WHPG workshop.
+secrets:
+  - name: EDB_SUBSCRIPTION_TOKEN

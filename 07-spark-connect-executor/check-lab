@@ -1,0 +1,35 @@
+#!/bin/bash
+# Verify a query against test_schema.region succeeds with the Spark Connect
+# executor pointed at the local server.
+set -euo pipefail
+
+PSQL_FLAGS=(-h localhost -p 7432 -U postgres -d demo -tAc)
+export PGPASSWORD=secret
+
+# Confirm Spark Connect server is up
+if ! bash -c '</dev/tcp/localhost/15002' 2>/dev/null; then
+  echo "FAIL: local Spark Connect (:15002) isn't listening." >&2
+  exit 1
+fi
+
+# Run a count against the imported/CTAS'd table with the Spark Connect engine
+COUNT=$(psql "${PSQL_FLAGS[@]}" <<'SQL'
+SET pgaa.executor_engine = 'spark_connect';
+SET pgaa.spark_connect_url = 'sc://spark-connect:15002';
+SELECT count(*) FROM test_schema.region;
+SQL
+)
+
+# psql prints just the value with -tAc — but with multi-statement, it prints
+# multiple lines (one per statement). The count is the last line.
+COUNT_VAL=$(echo "$COUNT" | tail -n1)
+
+if [ "$COUNT_VAL" != "5" ]; then
+  echo "FAIL: count(*) via spark_connect returned '$COUNT_VAL', expected 5." >&2
+  echo "      Full psql output:" >&2
+  echo "$COUNT" >&2
+  exit 1
+fi
+
+echo "OK: Spark Connect executor returned 5 rows from test_schema.region."
+exit 0

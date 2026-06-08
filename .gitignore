@@ -1,0 +1,38 @@
+# --- secrets ---
+# Never commit any .env that holds a real EDB_SUBSCRIPTION_TOKEN or other
+# auth material. The vendored .env.example files document expected names.
+**/.env
+!lab/.env
+!lab/.env.docker
+**/.env.local
+**/*.token
+**/*.pem
+**/*.key
+!**/*.pub.key
+
+# --- internal-only ---
+# Source PDFs / customer materials that shouldn't be in a public repo.
+prep-docs/
+*.pdf
+
+# --- editor / OS / Claude Code ---
+.DS_Store
+.idea/
+.vscode/
+.claude/
+*.swp
+*~
+*.bak
+
+# --- python venv (CLAUDE.md convention) ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- docker volumes if anyone runs `docker compose up` here ---
+**/data/
+**/lakekeeper-db-data/
+**/minio-data/
+**/pgd-data/
+**/pgd-analytics/
+**/spark-data/

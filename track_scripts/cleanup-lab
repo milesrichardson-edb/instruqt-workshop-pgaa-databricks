@@ -1,0 +1,8 @@
+#!/bin/bash
+# Top-level lab teardown — runs when the track ends.
+set -euo pipefail
+
+LAB_DIR="/root/workshop/lab"
+[ -d "$LAB_DIR" ] || exit 0
+cd "$LAB_DIR"
+docker compose down -v 2>&1 | sed 's/^/[cleanup-lab]   /' || true

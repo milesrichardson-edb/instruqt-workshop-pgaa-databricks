@@ -1,0 +1,47 @@
+services:
+  pgd:
+    image: converged-analytics-pgd
+    platform: linux/amd64
+    build:
+      context: .
+      secrets:
+        - edb_token
+      args:
+        PLATFORM: linux/amd64
+        PGAA_REPO: ${PGAA_REPO:-enterprise}
+    container_name: pgd
+    env_file:
+      - ../../.env.docker
+    environment:
+      POSTGRES_PASSWORD: secret
+      PGDATA: /var/lib/postgresql/db
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - pgd-data:/var/lib/postgresql/db
+      - pgd-analytics:/var/lib/postgresql/pgd-analytics
+    ports:
+      - "${BIND_IP:-0.0.0.0}:7432:5432"
+      - "${BIND_IP:-0.0.0.0}:6432:6432"
+      - "${BIND_IP:-0.0.0.0}:6433:6433"
+    networks:
+      - converged-analytics-network
+    restart: on-failure:5
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=secret psql -U postgres -d demo -c 'SELECT 1' > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  pgd-data:
+  pgd-analytics:
+
+networks:
+  converged-analytics-network:
+    external: true
+    name: converged-analytics-network
+
+secrets:
+  edb_token:
+    environment: EDB_SUBSCRIPTION_TOKEN

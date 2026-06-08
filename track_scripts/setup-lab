@@ -1,0 +1,107 @@
+#!/bin/bash
+# Top-level lab setup — runs once when the sandbox VM boots, before challenge 01.
+#
+# Instruqt only ships the track files (track.yml, config.yml, challenge dirs,
+# track_scripts/) onto the sandbox VM — it does NOT auto-upload arbitrary
+# directories like lab/. So we git-clone the public workshop repo at boot and
+# run docker compose against the cloned lab/.
+#
+# Brings up the local PGD + PGAA + Lakekeeper + Spark + MinIO stack so every
+# implementation challenge has a "local backend" to demonstrate against, in
+# parallel with the learner's real Postgres host → Databricks UC steps.
+#
+# Idempotent: safe to re-run. Per-challenge setup-host scripts only sanity-
+# check the relevant service; they do not re-invoke `docker compose up`.
+
+set -euo pipefail
+
+# Public Git repo that holds this workshop. Override with WORKSHOP_REPO_URL /
+# WORKSHOP_REPO_REF in the Instruqt UI if you forked.
+REPO_URL="${WORKSHOP_REPO_URL:-https://github.com/milesrichardson-edb/instruqt-workshop-pgaa-databricks.git}"
+REPO_REF="${WORKSHOP_REPO_REF:-main}"
+
+WORK_DIR="/root/workshop"
+LAB_DIR="$WORK_DIR/lab"
+COMPOSE="docker compose"
+NET="converged-analytics-network"
+
+log() { echo "[setup-lab] $*"; }
+
+# 1. Fetch the workshop repo (lab/ + everything else). Idempotent: if the
+#    clone already exists, fast-forward instead.
+if [ ! -d "$WORK_DIR/.git" ]; then
+  log "Cloning $REPO_URL ($REPO_REF) → $WORK_DIR"
+  git clone --depth 1 --branch "$REPO_REF" "$REPO_URL" "$WORK_DIR"
+else
+  log "Updating existing clone at $WORK_DIR"
+  git -C "$WORK_DIR" fetch --depth 1 origin "$REPO_REF"
+  git -C "$WORK_DIR" reset --hard "origin/$REPO_REF"
+fi
+
+if [ ! -d "$LAB_DIR" ]; then
+  log "ERROR: $LAB_DIR not found after clone — check WORKSHOP_REPO_URL."
+  exit 1
+fi
+
+cd "$LAB_DIR"
+
+# 2. Network. The component compose files declare this network as
+#    `external: true`, so create it ourselves before bringing the stack up.
+if ! docker network inspect "$NET" >/dev/null 2>&1; then
+  log "Creating docker network: $NET"
+  docker network create "$NET"
+fi
+
+# 3. EDB token. Instruqt injects sandbox secrets as env vars on the lab VM.
+#    The PGD Dockerfile expects EDB_SUBSCRIPTION_TOKEN as a BuildKit secret,
+#    fed from this env var (see lab/components/transactional-db/docker-compose.yml's
+#    `secrets:` stanza).
+if [ -z "${EDB_SUBSCRIPTION_TOKEN:-}" ]; then
+  log "ERROR: EDB_SUBSCRIPTION_TOKEN is not set."
+  log "  Set it under Org → Settings → Secrets in the Instruqt UI; the"
+  log "  PGD image build needs it to install edb-pgd6-* and edb-postgresextended-17-pgaa."
+  log "  Continuing — but the PGD service will fail to build."
+fi
+export EDB_SUBSCRIPTION_TOKEN
+
+# 4. Pre-pull the images that don't need to be built — Lakekeeper, MinIO,
+#    Spark, Postgres for Lakekeeper. Saves time during the first compose-up.
+log "Pulling buildless images..."
+$COMPOSE pull --ignore-buildable 2>&1 | sed 's/^/[setup-lab]   /' || true
+
+# 5. Build PGD with the BuildKit secret. We do this explicitly (rather than
+#    letting `compose up` build implicitly) so failures surface as a clear
+#    build-stage error rather than a confusing service start error.
+log "Building PGD image (this is the slow step — ~3-5 min on first boot)..."
+DOCKER_BUILDKIT=1 $COMPOSE build pgd 2>&1 | sed 's/^/[setup-lab]   /'
+
+# 6. Bring everyone up.
+log "Starting lab stack..."
+$COMPOSE up -d
+
+# 7. Wait for the services that the next-challenge check-lab scripts need.
+log "Waiting for Lakekeeper to be healthy..."
+for i in $(seq 1 60); do
+  if curl -sf http://localhost:8181/health >/dev/null 2>&1; then
+    log "Lakekeeper ready."
+    break
+  fi
+  sleep 2
+done
+
+log "Waiting for PGD (port 7432)..."
+for i in $(seq 1 60); do
+  if PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo -c 'SELECT 1' >/dev/null 2>&1; then
+    log "PGD ready."
+    break
+  fi
+  sleep 2
+done
+
+log "Applying source-schema seed (region + lineitem)..."
+PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo \
+  -v ON_ERROR_STOP=1 \
+  -f "$LAB_DIR/seed/010_source_schema.sql" \
+  2>&1 | sed 's/^/[setup-lab]   /' || log "Seed already applied (or PGD unavailable)"
+
+log "Lab setup complete."

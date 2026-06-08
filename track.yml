@@ -1,0 +1,42 @@
+slug: pgaa-databricks-unity-catalog
+id: y5lx0xnneuat
+title: 'PGAA × Databricks Unity Catalog: Query Lakehouse Data from Postgres'
+teaser: Register Databricks Unity Catalog as an Iceberg REST catalog in PGAA, and
+  route analytical queries through Databricks Spark Connect — with a parallel local
+  Lakekeeper lab so every step works two ways.
+description: |
+  Analytics-platform teams want to keep Postgres as the SQL surface and let
+  Databricks Unity Catalog be the source of truth for Iceberg tables. This
+  workshop walks through the end-to-end PGAA configuration: registering Unity
+  Catalog, creating tables via CTAS, importing schemas, and switching the
+  executor engine to Databricks Spark Connect.
+
+  Every implementation step is shown twice — once against your real Databricks
+  workspace (paste into psql on your own Postgres host) and once against a
+  local Lakekeeper catalog running inside the Instruqt sandbox. Same PGAA SQL,
+  two backends.
+tags:
+- unity-catalog
+- postgres
+- pgaa
+- iceberg
+- databricks
+owner: edb
+developers:
+- miles.richardson@enterprisedb.com
+show_timer: true
+idle_timeout: 1800
+timelimit: 5400
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: true
+  loadingMessages: false
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+  default_layout: AssignmentLeft
+  default_layout_sidebar_size: 40
+checksum: "15756185905002392771"
+enhanced_loading: false

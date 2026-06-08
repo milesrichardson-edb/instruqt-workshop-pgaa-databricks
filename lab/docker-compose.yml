@@ -1,0 +1,16 @@
+# Unified entry point for the workshop's local lab stack.
+#
+# Vendored from converged-analytics-internal — see lab/README.md for the
+# scope-trimming we applied (analytics-db / monitoring / wem / proxy /
+# call-center-demo are out of scope for this workshop).
+#
+# Usage (inside the Instruqt sandbox VM, or your laptop):
+#   cd lab && docker compose up -d
+#
+# Per-component compose files still work standalone:
+#   cd lab/components/transactional-db && docker compose up -d
+
+include:
+  - path: components/catalog/docker-compose.yml
+  - path: components/transactional-db/docker-compose.yml
+  - path: components/spark/docker-compose.yml

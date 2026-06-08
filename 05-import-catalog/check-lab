@@ -1,0 +1,29 @@
+#!/bin/bash
+# Verify the local import_catalog round-trip works.
+set -euo pipefail
+
+PSQL="PGPASSWORD=secret psql -h localhost -p 7432 -U postgres -d demo -tAc"
+
+# Table from the import is queryable
+EXISTS=$(eval "$PSQL \"SELECT to_regclass('test_schema.region') IS NOT NULL\"")
+if [ "$EXISTS" != "t" ]; then
+  echo "FAIL: test_schema.region not present. Did you run the local import_catalog block?" >&2
+  exit 1
+fi
+
+# Listed under local_lakekeeper
+CATALOG=$(eval "$PSQL \"SELECT catalog_name FROM pgaa.list_analytics_tables() WHERE schema_name='test_schema' AND table_name='region'\"")
+if [ "$CATALOG" != "local_lakekeeper" ]; then
+  echo "FAIL: test_schema.region is not managed by local_lakekeeper (saw '$CATALOG')." >&2
+  exit 1
+fi
+
+# Five rows from the seed
+COUNT=$(eval "$PSQL \"SELECT count(*) FROM test_schema.region\"")
+if [ "$COUNT" != "5" ]; then
+  echo "FAIL: test_schema.region count is $COUNT, expected 5." >&2
+  exit 1
+fi
+
+echo "OK: import_catalog round-trip verified (5 rows in test_schema.region via local_lakekeeper)."
+exit 0
