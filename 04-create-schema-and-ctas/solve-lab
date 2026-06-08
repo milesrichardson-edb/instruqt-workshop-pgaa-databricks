@@ -10,8 +10,6 @@ CREATE SCHEMA IF NOT EXISTS test_schema;
 
 DROP TABLE IF EXISTS test_schema.region;
 
-SET pgaa.autostart_seafowl = true;
-
 CREATE TABLE test_schema.region
 USING PGAA WITH (
   pgaa.managed_by = 'local_lakekeeper',

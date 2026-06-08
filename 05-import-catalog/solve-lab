@@ -4,8 +4,6 @@
 set -euo pipefail
 
 docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" <<'EOSQL'
-SET pgaa.autostart_seafowl = true;
-
 DROP TABLE IF EXISTS test_schema.region;
 
 SELECT pgaa.import_catalog('local_lakekeeper', 'test_schema');

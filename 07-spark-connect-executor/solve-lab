@@ -6,7 +6,6 @@
 set -euo pipefail
 
 docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" <<'EOSQL'
-SET pgaa.autostart_seafowl = true;
 SET pgaa.executor_engine = 'spark_connect';
 SET pgaa.spark_connect_url = 'sc://spark-connect:15002';
 

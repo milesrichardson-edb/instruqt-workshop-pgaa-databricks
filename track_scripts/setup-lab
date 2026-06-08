@@ -102,19 +102,25 @@ for i in $(seq 1 90); do
 done
 
 # The entrypoint sets shared_preload_libraries='$libdir/bdr, pgaa' on first
-# init, but pgfs is required for any catalog operation that touches storage
-# (CTAS, import_catalog, queries against PGAA tables). Make sure it's in the
-# list, then restart PGD if we changed anything.
-log "Ensuring shared_preload_libraries = bdr, pgaa, pgfs..."
+# init and leaves pgaa.autostart_seafowl unset (which defaults on but doesn't
+# always pick up — depends on PGD's restart sequence). Force both:
+#   - shared_preload_libraries = bdr, pgaa, pgfs (pgfs is required for CTAS
+#     and any storage-backed catalog op).
+#   - pgaa.autostart_seafowl = on (it's a POSTMASTER-level GUC, must be set
+#     in conf and read at startup; SET doesn't work for it at session level).
+log "Ensuring shared_preload_libraries=bdr,pgaa,pgfs and pgaa.autostart_seafowl=on..."
 NEED_RESTART=$(docker exec pgd bash -c "
   CONF=/var/lib/postgresql/db/postgresql.conf
-  CURRENT=\$(grep -E '^shared_preload_libraries' \"\$CONF\" | tail -n1)
-  if echo \"\$CURRENT\" | grep -q 'pgfs'; then
-    echo no
-  else
+  CHANGED=no
+  if ! grep -E '^shared_preload_libraries' \"\$CONF\" | tail -n1 | grep -q 'pgfs'; then
     sed -i \"s|^shared_preload_libraries.*|shared_preload_libraries = '\\\$libdir/bdr, pgaa, pgfs'|\" \"\$CONF\"
-    echo yes
+    CHANGED=yes
   fi
+  if ! grep -qE '^pgaa\.autostart_seafowl[[:space:]]*=' \"\$CONF\"; then
+    echo 'pgaa.autostart_seafowl = on' >> \"\$CONF\"
+    CHANGED=yes
+  fi
+  echo \$CHANGED
 ")
 
 if [ "$NEED_RESTART" = "yes" ]; then
