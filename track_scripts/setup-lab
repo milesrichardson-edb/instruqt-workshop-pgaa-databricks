@@ -101,6 +101,36 @@ for i in $(seq 1 90); do
   sleep 2
 done
 
+# The entrypoint sets shared_preload_libraries='$libdir/bdr, pgaa' on first
+# init, but pgfs is required for any catalog operation that touches storage
+# (CTAS, import_catalog, queries against PGAA tables). Make sure it's in the
+# list, then restart PGD if we changed anything.
+log "Ensuring shared_preload_libraries = bdr, pgaa, pgfs..."
+NEED_RESTART=$(docker exec pgd bash -c "
+  CONF=/var/lib/postgresql/db/postgresql.conf
+  CURRENT=\$(grep -E '^shared_preload_libraries' \"\$CONF\" | tail -n1)
+  if echo \"\$CURRENT\" | grep -q 'pgfs'; then
+    echo no
+  else
+    sed -i \"s|^shared_preload_libraries.*|shared_preload_libraries = '\\\$libdir/bdr, pgaa, pgfs'|\" \"\$CONF\"
+    echo yes
+  fi
+")
+
+if [ "$NEED_RESTART" = "yes" ]; then
+  log "shared_preload_libraries updated; restarting PGD..."
+  docker exec pgd bash -c "/usr/lib/edb-pge/17/bin/pg_ctl -D /var/lib/postgresql/db -l /var/lib/postgresql/logfile restart" \
+    2>&1 | sed 's/^/[setup-lab]   /' || log "(PGD restart reported errors)"
+  # Wait again for the restarted instance to come back.
+  for i in $(seq 1 60); do
+    if docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -c 'SELECT 1'" >/dev/null 2>&1; then
+      log "PGD back up after restart (after ${i} attempts)."
+      break
+    fi
+    sleep 2
+  done
+fi
+
 log "Applying source-schema seed (region + lineitem)..."
 # Stream the seed file into psql inside the container; no need to bind-mount.
 docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" \
