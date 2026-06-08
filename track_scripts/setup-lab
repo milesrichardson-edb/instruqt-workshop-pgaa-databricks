@@ -132,6 +132,9 @@ SELECT pgaa.add_catalog(
     "warehouse_name": "demo-warehouse"
   }'
 );
+-- pgaa.add_catalog leaves the catalog in 'detached' state until the metastore
+-- sync worker picks it up. Force attach now so check-lab sees 'attached'.
+SELECT pgaa.attach_catalog('local_lakekeeper');
 SELECT name, type, status FROM pgaa.list_catalogs() WHERE name = 'local_lakekeeper';
 EOSQL
 
