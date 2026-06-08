@@ -120,8 +120,8 @@ if [ -z "$WAREHOUSE_ID" ]; then
   log "WARNING: Could not look up demo-warehouse ID from Lakekeeper. Catalog reg may fail."
 fi
 
-docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=0" 2>&1 \
-  | sed 's/^/[setup-lab]   /' <<EOSQL || log "(catalog re-register reported errors — challenge 03 will diagnose)"
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=0" <<EOSQL 2>&1 | sed 's/^/[setup-lab]   /' \
+  || log "(catalog re-register reported errors — challenge 03 will diagnose)"
 SELECT * FROM pgaa.delete_catalog('local_lakekeeper', cascade := true);
 SELECT pgaa.add_catalog(
   'local_lakekeeper',
