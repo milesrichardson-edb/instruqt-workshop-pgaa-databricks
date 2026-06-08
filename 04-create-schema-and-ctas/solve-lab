@@ -1,0 +1,24 @@
+#!/bin/bash
+# Solve-mode: do what the learner would paste in the "On the Instruqt sandbox"
+# block — CREATE SCHEMA + CTAS into local_lakekeeper. Idempotent so re-runs
+# don't break.
+# psql is inside the pgd container, not on the host VM.
+set -euo pipefail
+
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" <<'EOSQL'
+CREATE SCHEMA IF NOT EXISTS test_schema;
+
+DROP TABLE IF EXISTS test_schema.region;
+
+CREATE TABLE test_schema.region
+USING PGAA WITH (
+  pgaa.managed_by = 'local_lakekeeper',
+  pgaa.catalog_table = 'region',
+  pgaa.catalog_namespace = 'test_schema',
+  pgaa.format = 'iceberg',
+  pgaa.purge_data_if_exists = 'true'
+)
+AS ( SELECT * FROM source_schema.region );
+
+SELECT count(*) FROM test_schema.region;
+EOSQL

@@ -1,0 +1,13 @@
+#!/bin/bash
+# Solve-mode: route a query through the local Spark Connect server. The
+# check-lab runs the same query independently to verify, but we need this to
+# be runnable as a standalone "I'm done with this challenge" trigger so the
+# track-test harness can move on.
+set -euo pipefail
+
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" <<'EOSQL'
+SET pgaa.executor_engine = 'spark_connect';
+SET pgaa.spark_connect_url = 'sc://spark-connect:15002';
+
+SELECT count(*) FROM test_schema.region;
+EOSQL

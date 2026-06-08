@@ -1,0 +1,12 @@
+#!/bin/bash
+# Solve-mode: pgaa.import_catalog round-trip. Drops the local PGAA shadow,
+# re-imports from local_lakekeeper, expects test_schema.region to come back.
+set -euo pipefail
+
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=1" <<'EOSQL'
+DROP TABLE IF EXISTS test_schema.region;
+
+SELECT pgaa.import_catalog('local_lakekeeper', 'test_schema');
+
+SELECT count(*) FROM test_schema.region;
+EOSQL
