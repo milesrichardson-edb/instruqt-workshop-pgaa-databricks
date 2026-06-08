@@ -108,10 +108,31 @@ docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERR
   || log "Seed already applied (or PGD unavailable)"
 
 # The PGD entrypoint registers `local_lakekeeper` via `bdr.replicate_ddl_command`,
-# which leaves the catalog in `detached` state on the local node until we
-# explicitly attach. Idempotent: attach is a no-op if already attached.
-log "Attaching local_lakekeeper catalog..."
-docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -tAc \"SELECT pgaa.attach_catalog('local_lakekeeper');\"" \
-  2>&1 | sed 's/^/[setup-lab]   /' || log "(catalog attach failed — challenge 03 will report)"
+# which leaves the catalog detached on a single-node lab. Drop the BDR-replicated
+# row and re-add directly so the catalog ends up attached and queryable.
+# Idempotent: re-running `delete_catalog` for a missing catalog is a no-op via
+# the cascade flag.
+log "Re-registering local_lakekeeper catalog directly (bypassing BDR replication)..."
+WAREHOUSE_ID=$(curl -fsS http://localhost:8181/management/v1/warehouse 2>/dev/null \
+  | python3 -c "import sys, json; data=json.load(sys.stdin); print(next((w['id'] for w in data.get('warehouses', []) if w.get('name') == 'demo-warehouse'), ''))" 2>/dev/null \
+  || echo "")
+if [ -z "$WAREHOUSE_ID" ]; then
+  log "WARNING: Could not look up demo-warehouse ID from Lakekeeper. Catalog reg may fail."
+fi
+
+docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERROR_STOP=0" 2>&1 \
+  | sed 's/^/[setup-lab]   /' <<EOSQL || log "(catalog re-register reported errors — challenge 03 will diagnose)"
+SELECT * FROM pgaa.delete_catalog('local_lakekeeper', cascade := true);
+SELECT pgaa.add_catalog(
+  'local_lakekeeper',
+  'iceberg-rest',
+  '{
+    "url": "http://lakekeeper:8181/catalog",
+    "warehouse": "$WAREHOUSE_ID",
+    "warehouse_name": "demo-warehouse"
+  }'
+);
+SELECT name, type, status FROM pgaa.list_catalogs() WHERE name = 'local_lakekeeper';
+EOSQL
 
 log "Lab setup complete."
