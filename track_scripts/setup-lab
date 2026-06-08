@@ -107,4 +107,11 @@ docker exec -i pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -v ON_ERR
   < "$LAB_DIR/seed/010_source_schema.sql" 2>&1 | sed 's/^/[setup-lab]   /' \
   || log "Seed already applied (or PGD unavailable)"
 
+# The PGD entrypoint registers `local_lakekeeper` via `bdr.replicate_ddl_command`,
+# which leaves the catalog in `detached` state on the local node until we
+# explicitly attach. Idempotent: attach is a no-op if already attached.
+log "Attaching local_lakekeeper catalog..."
+docker exec pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo -tAc \"SELECT pgaa.attach_catalog('local_lakekeeper');\"" \
+  2>&1 | sed 's/^/[setup-lab]   /' || log "(catalog attach failed — challenge 03 will report)"
+
 log "Lab setup complete."
