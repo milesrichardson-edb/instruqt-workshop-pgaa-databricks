@@ -13,15 +13,15 @@ notes:
     with PGAA installed, and a Spark Connect server. That whole stack
     will be ready by the time you reach challenge 03.
 tabs:
-- id: dnkefegl5xhz
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: qewryzhgersl
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: dnkefegl5xhz
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 - id: 7eustotod2vt
   title: Lakekeeper UI
   type: service
@@ -92,4 +92,4 @@ because Azure portal work isn't something Instruqt can drive.
 | 07 | Spark Connect as executor      | `SET pgaa.executor_engine = 'spark_connect'` + query                 |
 | 08 | Recap + Known Limitations      | Views endpoint, decimal/numeric, when to choose which engine         |
 
-Click **Check** to continue.
+Click **Next** to continue.

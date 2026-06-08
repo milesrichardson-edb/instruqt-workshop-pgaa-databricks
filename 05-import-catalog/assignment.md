@@ -6,15 +6,15 @@ title: Import an entire catalog namespace
 teaser: pgaa.import_catalog() pulls every table in a namespace into Postgres in one
   call.
 tabs:
-- id: 45mbzjh48qql
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: 2w1wxcoiezq7
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: 45mbzjh48qql
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 difficulty: intermediate
 timelimit: 600
 enhanced_loading: null

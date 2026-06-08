@@ -85,4 +85,4 @@ inside the docker network and `localhost:15002` from the sandbox VM's
 perspective. No auth, no cluster ID — those are Databricks-side concepts.
 You'll see the difference between the two URLs in the next challenge.
 
-Click **Check** to continue.
+Click **Next** to continue.

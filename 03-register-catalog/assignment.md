@@ -6,15 +6,15 @@ title: Register the Iceberg REST catalog
 teaser: pgaa.add_catalog() — same call, two backends. Once for Unity Catalog, once
   for local Lakekeeper.
 tabs:
-- id: 9pcuaswzx6nz
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: 3isx9pzzuxqs
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: 9pcuaswzx6nz
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 - id: yrlysqh6jwhz
   title: Lakekeeper UI
   type: service

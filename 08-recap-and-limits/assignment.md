@@ -6,15 +6,15 @@ title: Recap + Known Limitations
 teaser: What you've built, what you can't (yet) do, and which engine to choose for
   what.
 tabs:
-- id: c1bmt6gn9ydq
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: dxshjupachre
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: c1bmt6gn9ydq
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 difficulty: basic
 timelimit: 600
 enhanced_loading: null
@@ -120,4 +120,4 @@ working in your environment.
   registration JSON if your org has non-trivial OAuth or networking
   constraints.
 
-Click **Check** to finish the workshop.
+Click **Next** to finish the workshop.

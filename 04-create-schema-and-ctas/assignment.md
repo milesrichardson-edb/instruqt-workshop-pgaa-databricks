@@ -6,15 +6,15 @@ title: Create a schema and write a table via CTAS
 teaser: CREATE TABLE … USING PGAA AS SELECT * FROM source — once into UC, once into
   Lakekeeper.
 tabs:
-- id: xlybizl20fn0
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: jwekwzzebarx
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: xlybizl20fn0
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 - id: r20roq2cdxur
   title: MinIO console
   type: service

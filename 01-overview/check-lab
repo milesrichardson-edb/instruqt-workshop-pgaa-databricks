@@ -1,5 +1,0 @@
-#!/bin/bash
-# Trivial check — challenge 01 is read-only. We just want to confirm the
-# learner clicked through (and let the sandbox keep warming the stack).
-set -euo pipefail
-exit 0

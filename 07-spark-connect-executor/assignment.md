@@ -6,15 +6,15 @@ title: Switch the executor engine to Spark Connect
 teaser: SET pgaa.executor_engine = 'spark_connect' — same query, now offloaded to
   Spark.
 tabs:
-- id: fqnk3fv4ftnh
-  title: Lab terminal
-  type: terminal
-  hostname: lab
 - id: rbaatao1snud
   title: Lab DB (psql)
   type: terminal
   hostname: lab
   cmd: docker exec -it pgd bash -c "PGPASSWORD=secret psql -U postgres -d demo"
+- id: fqnk3fv4ftnh
+  title: Lab terminal
+  type: terminal
+  hostname: lab
 - id: ckkwjaus03x2
   title: Spark UI
   type: service
