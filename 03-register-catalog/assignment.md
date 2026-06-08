@@ -90,7 +90,23 @@ Expected:
  local_lakekeeper  | iceberg-rest | attached
 ```
 
-To re-register it from scratch (drop + add — useful for muscle memory):
+To re-register it from scratch (drop + add — useful for muscle memory),
+you'll need the warehouse's UUID from Lakekeeper. The UUID is generated
+when Lakekeeper creates the warehouse, so it's different in every sandbox.
+Look it up first, then paste the registration:
+
+In the **Lab terminal** tab:
+
+```bash
+WAREHOUSE_ID=$(
+  curl -fsS http://localhost:8181/management/v1/warehouse \
+  | python3 -c "import sys,json; print(next(w['id'] for w in json.load(sys.stdin)['warehouses'] if w['name']=='demo-warehouse'))"
+)
+echo "$WAREHOUSE_ID"
+```
+
+In the **Lab DB (psql)** tab — substitute the UUID you just printed for
+`<warehouse_id>`:
 
 ```sql
 SELECT * FROM pgaa.delete_catalog('local_lakekeeper', cascade := true);
@@ -100,17 +116,25 @@ SELECT pgaa.add_catalog(
   'iceberg-rest',
   '{
     "url": "http://lakekeeper:8181/catalog",
+    "warehouse": "<warehouse_id>",
     "warehouse_name": "demo-warehouse"
   }'
 );
 
+SELECT pgaa.attach_catalog('local_lakekeeper');
+
 SELECT name, type, status FROM pgaa.list_catalogs();
 ```
 
-Note: no `token` and no `warehouse` ID — Lakekeeper's `allowall` authz
-backend doesn't require one, and `warehouse_name` is enough for PGAA to
-resolve the warehouse against the management API. That's the *only*
-substantive difference from the UC block above.
+Note the difference from the UC block above: Lakekeeper takes a UUID for
+`warehouse`, while Unity Catalog takes a path like `catalogs/prod_data`.
+Both serve the same purpose — telling the catalog which warehouse this
+client is talking to. UC also takes a `token` (the PAT), Lakekeeper in
+`allowall` mode doesn't need one. Otherwise the calls are identical.
+
+`pgaa.add_catalog` registers the catalog but leaves it `detached` until
+the metastore-sync worker refreshes (default ~30s). `pgaa.attach_catalog`
+forces an immediate attach so you don't have to wait.
 
 ---
 

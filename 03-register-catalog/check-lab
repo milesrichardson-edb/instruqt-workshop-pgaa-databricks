@@ -21,7 +21,11 @@ fi
 STATUS="${ROW##*|}"
 if [ "$STATUS" != "attached" ]; then
   echo "FAIL: local_lakekeeper is registered but status='$STATUS' (expected 'attached')." >&2
-  echo "      Check the Lakekeeper container is healthy: docker compose ps" >&2
+  echo "" >&2
+  echo "      Run this in the Lab DB tab to attach it:" >&2
+  echo "          SELECT pgaa.attach_catalog('local_lakekeeper');" >&2
+  echo "" >&2
+  echo "      Then click Check again." >&2
   exit 1
 fi
 
